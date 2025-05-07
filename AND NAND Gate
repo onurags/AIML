@@ -29,3 +29,100 @@ def test_gates():
 
 if __name__ == "__main__":
     test_gates()
+
+
+____________________________________________
+
+using feed forward NN 
+
+import numpy as np
+
+# Sigmoid activation function and its derivative
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+def sigmoid_derivative(x):
+    return x * (1 - x)
+
+# Feedforward neural network class
+class FeedForwardNN:
+    def __init__(self, input_size, hidden_size, output_size):
+        # Initialize weights and biases
+        self.weights_input_hidden = np.random.randn(input_size, hidden_size)  # weights between input and hidden layer
+        self.weights_hidden_output = np.random.randn(hidden_size, output_size)  # weights between hidden and output layer
+        self.bias_hidden = np.random.randn(hidden_size)  # bias for hidden layer
+        self.bias_output = np.random.randn(output_size)  # bias for output layer
+    
+    # Forward pass
+    def forward(self, X):
+        self.hidden_input = np.dot(X, self.weights_input_hidden) + self.bias_hidden
+        self.hidden_output = sigmoid(self.hidden_input)
+        
+        self.output_input = np.dot(self.hidden_output, self.weights_hidden_output) + self.bias_output
+        self.output = sigmoid(self.output_input)
+        
+        return self.output
+    
+    # Backpropagation to adjust weights and biases
+    def backward(self, X, y, learning_rate=0.1):
+        # Calculate the error (difference between predicted and actual output)
+        output_error = y - self.output
+        output_delta = output_error * sigmoid_derivative(self.output)
+        
+        hidden_error = output_delta.dot(self.weights_hidden_output.T)
+        hidden_delta = hidden_error * sigmoid_derivative(self.hidden_output)
+        
+        # Update weights and biases
+        self.weights_hidden_output += self.hidden_output.T.dot(output_delta) * learning_rate
+        self.bias_output += np.sum(output_delta, axis=0) * learning_rate
+        
+        self.weights_input_hidden += X.T.dot(hidden_delta) * learning_rate
+        self.bias_hidden += np.sum(hidden_delta, axis=0) * learning_rate
+
+# Training the network for AND gate
+def train_and_gate():
+    # Input and output for AND gate
+    X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+    y = np.array([[0], [0], [0], [1]])
+
+    # Initialize the neural network
+    nn = FeedForwardNN(input_size=2, hidden_size=3, output_size=1)
+
+    # Train the neural network
+    for epoch in range(10000):  # Training for 10000 epochs
+        nn.forward(X)
+        nn.backward(X, y)
+
+    # Testing the trained network
+    print("AND Gate:")
+    for x1 in [0, 1]:
+        for x2 in [0, 1]:
+            output = nn.forward(np.array([[x1, x2]]))
+            print(f"{x1} AND {x2} = {round(output[0][0])}")
+
+# Training the network for NAND gate
+def train_nand_gate():
+    # Input and output for NAND gate
+    X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+    y = np.array([[1], [1], [1], [0]])
+
+    # Initialize the neural network
+    nn = FeedForwardNN(input_size=2, hidden_size=3, output_size=1)
+
+    # Train the neural network
+    for epoch in range(10000):  # Training for 10000 epochs
+        nn.forward(X)
+        nn.backward(X, y)
+
+    # Testing the trained network
+    print("NAND Gate:")
+    for x1 in [0, 1]:
+        for x2 in [0, 1]:
+            output = nn.forward(np.array([[x1, x2]]))
+            print(f"{x1} NAND {x2} = {round(output[0][0])}")
+
+# Main function to run the training and testing
+if __name__ == "__main__":
+    train_and_gate()
+    print("\n")
+    train_nand_gate()
